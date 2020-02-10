@@ -15,59 +15,59 @@ def find_flanking(reads, span, contig_len, overlap_buffer=1, allow_clipped=False
     tlens = []
     proper_pairs = Set()
     for read in reads:
-	if read.is_proper_pair and is_fully_mapped(read, contig_len, allow_clipped=allow_clipped, min_ratio_mapped=min_ratio_mapped):
-	    proper_pairs.add(read.qname + str(read.pos))
-	    #if read.tlen > 0:
-		#tlens.append(read.tlen)
+        if read.is_proper_pair and is_fully_mapped(read, contig_len, allow_clipped=allow_clipped, min_ratio_mapped=min_ratio_mapped):
+            proper_pairs.add(read.qname + str(read.pos))
+            #if read.tlen > 0:
+                #tlens.append(read.tlen)
 
     for read in [r for r in reads if not r.is_unmapped and r.tlen > 0]:
-	if read.qname + str(read.pos) in proper_pairs:
-	    # internal fragment
-	    frag = (read.pos + read.alen, read.pnext)
+        if read.qname + str(read.pos) in proper_pairs:
+            # internal fragment
+            frag = (read.pos + read.alen, read.pnext)
 
-	    if frag is not None and frag[0] <= span[0] - overlap_buffer and frag[1] >= span[1] + overlap_buffer:
-		uniq_frags[frag].append(read.qname)
+            if frag is not None and frag[0] <= span[0] - overlap_buffer and frag[1] >= span[1] + overlap_buffer:
+                uniq_frags[frag].append(read.qname)
 
     num_frags = len(uniq_frags.keys())
 
     if debug:
-	for f in uniq_frags.keys():
-	    sys.stdout.write("Accepted flanking: %s %s %s\n" % (span, f, ','.join(uniq_frags[f])))
+        for f in uniq_frags.keys():
+            sys.stdout.write("Accepted flanking: %s %s %s\n" % (span, f, ','.join(uniq_frags[f])))
 
     return num_frags, tlens
 
 def find_spanning(reads, span, contig_seq, overlap_buffer=1, debug=False, perfect=False, get_seq=False, allow_clipped=False, min_ratio_mapped=None):
     def check_read(start, end):
-	break_seq = contig_seq[start - 1 - overlap_buffer: end + overlap_buffer]
-	return read.pos < start - overlap_buffer and\
-	       read.pos + read.alen >= end + overlap_buffer and\
-	       is_fully_mapped(read, contig_len, perfect=perfect, allow_clipped=allow_clipped, min_ratio_mapped=min_ratio_mapped) and\
-	       is_break_region_perfect(read, break_seq, (start, end), overlap_buffer)
+        break_seq = contig_seq[start - 1 - overlap_buffer: end + overlap_buffer]
+        return read.pos < start - overlap_buffer and\
+               read.pos + read.alen >= end + overlap_buffer and\
+               is_fully_mapped(read, contig_len, perfect=perfect, allow_clipped=allow_clipped, min_ratio_mapped=min_ratio_mapped) and\
+               is_break_region_perfect(read, break_seq, (start, end), overlap_buffer)
 
     contig_len = len(contig_seq)
     pos = Set()
     names = Set()
     for read in reads:
-	if read.alen:
-	    if check_read(span[0], span[1]):
-		strand = '+' if not read.is_reverse else '-'
+        if read.alen:
+            if check_read(span[0], span[1]):
+                strand = '+' if not read.is_reverse else '-'
 
-		start_pos = read.pos
-		if read.cigar[0][0] >= 4 and read.cigar[0][0] <= 5:
-		    start_pos = -1 * read.cigar[0][1]
-		key = str(start_pos) + strand
-		
-		if not key in pos and not read.qname in names:
-		    pos.add(key)
-		    names.add(read.qname)
+                start_pos = read.pos
+                if read.cigar[0][0] >= 4 and read.cigar[0][0] <= 5:
+                    start_pos = -1 * read.cigar[0][1]
+                key = str(start_pos) + strand
+                
+                if not key in pos and not read.qname in names:
+                    pos.add(key)
+                    names.add(read.qname)
 
-		    if debug:
-			sys.stdout.write("Accepted spanning read(perfect:%s): %s %s %s %s %s\n" % (perfect, 
-		                                                                                   read.qname,
-		                                                                                   span,
-		                                                                                   (read.pos + 1, read.pos + read.alen),
-		                                                                                   read.seq,
-		                                                                                   strand))
+                    if debug:
+                        sys.stdout.write("Accepted spanning read(perfect:%s): %s %s %s %s %s\n" % (perfect, 
+                                                                                                   read.qname,
+                                                                                                   span,
+                                                                                                   (read.pos + 1, read.pos + read.alen),
+                                                                                                   read.seq,
+                                                                                                   strand))
     num_frags = len(pos)
 
     return num_frags
@@ -75,12 +75,12 @@ def find_spanning(reads, span, contig_seq, overlap_buffer=1, debug=False, perfec
 def is_break_region_perfect(read, break_seq, breaks, overlap_buffer):
     start_idx = breaks[0] - read.pos - 1
     if read.cigar[0][0] >= 4 and read.cigar[0][0] <= 5:
-	start_idx += read.cigar[0][1]
+        start_idx += read.cigar[0][1]
     read_break_seq = read.seq[start_idx - overlap_buffer : start_idx - overlap_buffer + len(break_seq)]
     if read_break_seq.lower() == break_seq.lower():
-	return True
+        return True
     else:
-	return False
+        return False
     
 def check_tiling(reads, breaks, contig_len, debug=False):
     """Checks if there are reads tiling across breakpoints with no gaps
@@ -97,24 +97,24 @@ def check_tiling(reads, breaks, contig_len, debug=False):
     """
     span = None
     for read in reads:
-	# skip reads that is unmapped, not properly paired, or the second mate, or not fully mapped
+        # skip reads that is unmapped, not properly paired, or the second mate, or not fully mapped
         if not read.alen or not is_fully_mapped(read, contig_len):
             continue
-	
-	# skip reads that don't overlap the breakpoints
-	if read.pos + read.alen < breaks[0] or read.pos > breaks[1]:
-	    continue
-	
-	try:
-	    span = span.union(intspan('%d-%d' % (read.pos + 1, read.pos + read.alen)))
-	except:
-	    span = intspan('%d-%d' % (read.pos + 1, read.pos + read.alen))
-	    	
+        
+        # skip reads that don't overlap the breakpoints
+        if read.pos + read.alen < breaks[0] or read.pos > breaks[1]:
+            continue
+        
+        try:
+            span = span.union(intspan('%d-%d' % (read.pos + 1, read.pos + read.alen)))
+        except:
+            span = intspan('%d-%d' % (read.pos + 1, read.pos + read.alen))
+                
     if span is not None:
-	break_span = intspan('%d-%d' % (breaks[0], breaks[1]))
-	# make sure there is no gap in tiling reads and spans the entire breakpoint
-	if len(span.ranges()) == 1 and len(span & break_span) == len(break_span):
-	    return True
+        break_span = intspan('%d-%d' % (breaks[0], breaks[1]))
+        # make sure there is no gap in tiling reads and spans the entire breakpoint
+        if len(span.ranges()) == 1 and len(span & break_span) == len(break_span):
+            return True
     
     return False
 
@@ -129,28 +129,28 @@ def is_fully_mapped(read, contig_len, perfect=False, allow_clipped=False, min_ra
          len(read.cigar) == 2 and\
          re.search('S', read.cigarstring) and\
          float(read.alen) / read.inferred_length >= min_ratio_mapped:
-	if perfect:
+        if perfect:
             return True if read.opt('NM') == 0 else False
-	return True
+        return True
 
     return False
 
 def is_fully_mapped_to_edge(read, contig_len):
     if read.cigar:
-	if len(read.cigar) == 2:
-	    # clipped at beginning
-	    if (read.cigar[0][0] == 4 or read.cigar[0][0] == 5) and read.cigar[1][0] == 0 and read.pos == 0 and read.inferred_length == read.rlen:
-		return True
-	    # clipped at the end
-	    elif read.cigar[0][0] == 0 and (read.cigar[1][0] or 4 and read.cigar[1][0] == 5) and read.pos + read.alen == contig_len and read.inferred_length == read.rlen:
-		return True
-	elif len(read.cigar) == 3 and\
-	     read.pos == 0 and read.pos + read.alen == contig_len and\
-	     (read.cigar[0][0] == 4 or read.cigar[0][0] == 5) and\
-	     read.cigar[1][0] == 0 and\
-	     (read.cigar[2][0] == 4 or read.cigar[2][0] == 5) and\
-	     read.inferred_length == read.rlen:
-	    return True
+        if len(read.cigar) == 2:
+            # clipped at beginning
+            if (read.cigar[0][0] == 4 or read.cigar[0][0] == 5) and read.cigar[1][0] == 0 and read.pos == 0 and read.inferred_length == read.rlen:
+                return True
+            # clipped at the end
+            elif read.cigar[0][0] == 0 and (read.cigar[1][0] or 4 and read.cigar[1][0] == 5) and read.pos + read.alen == contig_len and read.inferred_length == read.rlen:
+                return True
+        elif len(read.cigar) == 3 and\
+             read.pos == 0 and read.pos + read.alen == contig_len and\
+             (read.cigar[0][0] == 4 or read.cigar[0][0] == 5) and\
+             read.cigar[1][0] == 0 and\
+             (read.cigar[2][0] == 4 or read.cigar[2][0] == 5) and\
+             read.inferred_length == read.rlen:
+            return True
     
     return False
 
@@ -160,7 +160,7 @@ def worker(args):
 
     coords_batch = defaultdict(list)
     for contig, start, end, align_type in coords:
-	coords_batch[contig].append(((start, end), align_type))
+        coords_batch[contig].append(((start, end), align_type))
     
     results, tlens = fetch_support(coords_batch,
                                    bam_file,
@@ -174,13 +174,13 @@ def worker(args):
 
     supports = []
     for contig, coords in results.iteritems():
-	for coord in coords:
-	    start, end = map(int, coord.split('-'))
-	    supports.append([contig, start, end,
-	                     results[contig][coord][0],
-	                     results[contig][coord][1],
-	                     results[contig][coord][2],
-	                     results[contig][coord][3]])
+        for coord in coords:
+            start, end = map(int, coord.split('-'))
+            supports.append([contig, start, end,
+                             results[contig][coord][0],
+                             results[contig][coord][1],
+                             results[contig][coord][2],
+                             results[contig][coord][3]])
     supports.append(tlens)
     return supports
 
@@ -218,59 +218,59 @@ def fetch_support(coords, bam_file, contig_fasta, overlap_buffer=0, perfect=Fals
     count = 0
     window_size = 2000
     for contig, spans_align_types in coords.iteritems():
-	count += 1
+        count += 1
         results[contig] = {}
-	contig_seq = contig_fasta.fetch(contig)
-	contig_len = len(contig_seq)
+        contig_seq = contig_fasta.fetch(contig)
+        contig_len = len(contig_seq)
 
-	spans = []
-	for span, align_type in spans_align_types:
-	    spans.append(span)
-	    coord = '-'.join(map(str, span))
-	    results[contig][coord] = [0, 0, None, []]
+        spans = []
+        for span, align_type in spans_align_types:
+            spans.append(span)
+            coord = '-'.join(map(str, span))
+            results[contig][coord] = [0, 0, None, []]
 
-	    reads = []
-	    for read in bam.fetch(contig, max(0, span[0] - window_size), min(contig_len, span[1] + window_size)):
-		reads.append(read)
+            reads = []
+            for read in bam.fetch(contig, max(0, span[0] - window_size), min(contig_len, span[1] + window_size)):
+                reads.append(read)
 
-	    spanning = find_spanning(reads, span, contig_seq, debug=debug,
-	                             overlap_buffer=overlap_buffer,
-	                             perfect=perfect,
-	                             get_seq=get_seq,
-	                             allow_clipped=allow_clipped,
-	                             min_ratio_mapped=min_ratio_mapped)
+            spanning = find_spanning(reads, span, contig_seq, debug=debug,
+                                     overlap_buffer=overlap_buffer,
+                                     perfect=perfect,
+                                     get_seq=get_seq,
+                                     allow_clipped=allow_clipped,
+                                     min_ratio_mapped=min_ratio_mapped)
 
-	    flanking, tlens = find_flanking(reads,
-	                                    span,
-	                                    contig_len,
-	                                    overlap_buffer=overlap_buffer,
-	                                    allow_clipped=allow_clipped,
-	                                    min_ratio_mapped=min_ratio_mapped,
-	                                    debug=debug)
+            flanking, tlens = find_flanking(reads,
+                                            span,
+                                            contig_len,
+                                            overlap_buffer=overlap_buffer,
+                                            allow_clipped=allow_clipped,
+                                            min_ratio_mapped=min_ratio_mapped,
+                                            debug=debug)
 
-	    results[contig][coord][0] = spanning
-	    results[contig][coord][1] = flanking
+            results[contig][coord][0] = spanning
+            results[contig][coord][1] = flanking
 
     return results, tlens_all
 
 def expand_contig_breaks(chrom, breaks, contig, contig_breaks, event, ref_fasta, contig_fasta, debug=False):
     def extract_repeat(seq):
-	repeat = {'start':None, 'end':None}
-	if len(seq) == 1:
-	    repeat['start'] = seq
-	    repeat['end'] = seq
-	else:
-	    re_start = re.compile(r"^(.+?)\1+")
-	    re_end = re.compile(r"(.+?)\1+$")
+        repeat = {'start':None, 'end':None}
+        if len(seq) == 1:
+            repeat['start'] = seq
+            repeat['end'] = seq
+        else:
+            re_start = re.compile(r"^(.+?)\1+")
+            re_end = re.compile(r"(.+?)\1+$")
 
-	    repeats = re_start.findall(seq)
-	    if repeats:
-		repeat['start'] = repeats[0]
-	    repeats = re_end.findall(seq)
-	    if repeats:
-		repeat['end'] = repeats[0]
-	
-	return repeat
+            repeats = re_start.findall(seq)
+            if repeats:
+                repeat['start'] = repeats[0]
+            repeats = re_end.findall(seq)
+            if repeats:
+                repeat['end'] = repeats[0]
+        
+        return repeat
 
     contig_breaks_sorted = sorted(contig_breaks)
     pos_strand = True if contig_breaks[0] < contig_breaks[1] else False
@@ -279,73 +279,73 @@ def expand_contig_breaks(chrom, breaks, contig, contig_breaks, event, ref_fasta,
     
     seq = None
     if event == 'del':
-	seq = ref_fasta.fetch(chrom, breaks[0], breaks[1] - 1)
-	if not pos_strand:
-	    seq = reverse_complement(seq)
-	    
+        seq = ref_fasta.fetch(chrom, breaks[0], breaks[1] - 1)
+        if not pos_strand:
+            seq = reverse_complement(seq)
+            
     elif event == 'ins':
-	seq = contig_seq[contig_breaks_sorted[0] : contig_breaks_sorted[1] - 1]
-	    
+        seq = contig_seq[contig_breaks_sorted[0] : contig_breaks_sorted[1] - 1]
+            
     if seq is None:
-	return None
+        return None
     
     repeat = extract_repeat(seq)
     
     if repeat['end'] is not None:
-	seq = repeat['end']
-	size = len(seq)
-	# downstream
-	start = contig_breaks_sorted[1]
-	expand = 0
-	while start + size <= len(contig_seq):
-	    next_seq = contig_seq[start : start + size]
-	    if next_seq.upper() != seq.upper():
-		break
-	    else:
-		expand += size
-		start += size
-	if pos_strand:
-	    contig_breaks_expanded[1] += expand
-	else:
-	    contig_breaks_expanded[0] += expand
-	
+        seq = repeat['end']
+        size = len(seq)
+        # downstream
+        start = contig_breaks_sorted[1]
+        expand = 0
+        while start + size <= len(contig_seq):
+            next_seq = contig_seq[start : start + size]
+            if next_seq.upper() != seq.upper():
+                break
+            else:
+                expand += size
+                start += size
+        if pos_strand:
+            contig_breaks_expanded[1] += expand
+        else:
+            contig_breaks_expanded[0] += expand
+        
     # upstream
     if repeat['start'] is not None:
-	seq = repeat['start']
-	size = len(seq)
-	start = contig_breaks_sorted[0] - 1
-	expand = 0
-	while start - size >= 0:
-	    next_seq = contig_seq[start - size : start]
-	    if next_seq.upper() != seq.upper():
-		break
-	    else:
-		expand -= size
-		start -= size
-	if pos_strand:
-	    contig_breaks_expanded[0] += expand
-	else:
-	    contig_breaks_expanded[1] += expand
-	
+        seq = repeat['start']
+        size = len(seq)
+        start = contig_breaks_sorted[0] - 1
+        expand = 0
+        while start - size >= 0:
+            next_seq = contig_seq[start - size : start]
+            if next_seq.upper() != seq.upper():
+                break
+            else:
+                expand -= size
+                start -= size
+        if pos_strand:
+            contig_breaks_expanded[0] += expand
+        else:
+            contig_breaks_expanded[1] += expand
+        
     if debug and tuple(contig_breaks_expanded) != contig_breaks:
-	sys.stdout.write('contig breaks expanded:%s %s -> %s\n' % (contig, contig_breaks, contig_breaks_expanded))
-	
+        sys.stdout.write('contig breaks expanded:%s %s -> %s\n' % (contig, contig_breaks, contig_breaks_expanded))
+        
     return tuple(contig_breaks_expanded)
 
 def sum_support(values, use_minimum=False):
     if not use_minimum:
-	return sum(values)
+        return sum(values)
     else:
-	return min(values)
+        return min(values)
 
 def filter_support(spanning, flanking, min_support, use_spanning=True, use_flanking=False):
     support = 0
     if use_spanning:
-	if spanning:
-	    support += spanning
+        if spanning:
+            support += spanning
     if use_flanking:
-	if flanking:
-	    support += flanking
+        if flanking:
+            support += flanking
 
     return support >= min_support
 
@@ -354,7 +354,7 @@ def main(args):
     for line in open(args.coords, 'r'):
         cols = line.rstrip('\n').split()
         span = tuple(sorted((int(cols[1]), int(cols[2]))))
-	coords.append((cols[0], span[0], span[1], cols[3]))
+        coords.append((cols[0], span[0], span[1], cols[3]))
     coords_sorted = sorted(coords, key=itemgetter(0,1,2))
             
     batches = list(create_batches(args.bam,
@@ -378,13 +378,13 @@ def main(args):
     support_reads = []
     for batch_result in batch_results:
         for support in batch_result:
-	    # insert sizes
-	    if len(support) > 7:
-		tlens_all.extend(support)
-		continue
+            # insert sizes
+            if len(support) > 7:
+                tlens_all.extend(support)
+                continue
 
-	    if len(support) == 0:
-		continue
+            if len(support) == 0:
+                continue
 
             contig, start, stop, spanning, flanking, tiling, support_reads = support
             coords = '%s-%s' % (start, stop)
@@ -395,9 +395,9 @@ def main(args):
                 results[contig][coords] = (spanning, flanking, tiling, support_reads)
 
     with open(args.outfile, 'w') as out:
-	for contig in results.keys():
-	    for coords in results[contig]:
-		out.write('%s\n' % '\t'.join(map(str, [contig, coords, results[contig][coords][0], results[contig][coords][1]])))
+        for contig in results.keys():
+            for coords in results[contig]:
+                out.write('%s\n' % '\t'.join(map(str, [contig, coords, results[contig][coords][0], results[contig][coords][1]])))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

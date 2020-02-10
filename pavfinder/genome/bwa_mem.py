@@ -159,7 +159,7 @@ def run(fasta, output_bam, genome, index_dir=None, num_threads=4):
     print(cmd)
     try:
         returncode = check_call(cmd, shell=True)
-    except CalledProcessError, e:
+    except CalledProcessError as e:
         sys.stderr.write('Failed to align:%s\n' % e.cmd)
         returncode = e.returncode
         

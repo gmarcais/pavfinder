@@ -23,7 +23,7 @@ class Alignment:
         self.cigarstring = ''
         self.identity = None
         self.score = None
-	self.query_len = None
+        self.query_len = None
         
     @classmethod
     def from_alignedRead(cls, read, bam):
@@ -35,7 +35,7 @@ class Alignment:
         align.set_start_end_from_blocks()
         align.cigar = read.cigar
         align.cigarstring = read.cigarstring
-	align.sam = read
+        align.sam = read
         return align
     
     def set_start_end_from_blocks(self):
@@ -58,32 +58,32 @@ class Alignment:
         return True
     
     def as_bed(self):
-	cols = [self.target, 
-	        int(self.tstart) - 1,
-	        int(self.tend),
-	        self.query,
-	        0,
-	        self.strand,
-	        int(self.tstart) - 1,
-	        int(self.tend),
-	        0,
-	        len(self.blocks),
-	        ','.join([str(int(b[1]) - int(b[0]) + 1) for b in self.blocks]),
-	        ','.join([str(int(b[0]) - int(self.tstart)) for b in self.blocks])
-	        ]
-	        
-	return '\t'.join([str(col) for col in cols])
+        cols = [self.target, 
+                int(self.tstart) - 1,
+                int(self.tend),
+                self.query,
+                0,
+                self.strand,
+                int(self.tstart) - 1,
+                int(self.tend),
+                0,
+                len(self.blocks),
+                ','.join([str(int(b[1]) - int(b[0]) + 1) for b in self.blocks]),
+                ','.join([str(int(b[0]) - int(self.tstart)) for b in self.blocks])
+                ]
+                
+        return '\t'.join([str(col) for col in cols])
 
     def qpos_to_tpos(self, qpos):
-	"""Converts query position to target position"""
-	for i in range(len(self.query_blocks)):
-	    qblock = self.query_blocks[i]
-	    tblock = self.blocks[i]
-	    if qblock[0] < qblock[1] and qpos >= qblock[0] and qpos <= qblock[1]:
-		return tblock[0] + qpos - qblock[0]
+        """Converts query position to target position"""
+        for i in range(len(self.query_blocks)):
+            qblock = self.query_blocks[i]
+            tblock = self.blocks[i]
+            if qblock[0] < qblock[1] and qpos >= qblock[0] and qpos <= qblock[1]:
+                return tblock[0] + qpos - qblock[0]
 
-	    elif qblock[0] > qblock[1] and qpos <= qblock[0] and qpos >= qblock[1]:
-		return tblock[0] + qblock[0] - qpos
+            elif qblock[0] > qblock[1] and qpos <= qblock[0] and qpos >= qblock[1]:
+                return tblock[0] + qblock[0] - qpos
         
 def cigar_to_blocks(cigar, tstart, strand):
     query_len = get_query_len_from_cigar(cigar)
@@ -160,74 +160,74 @@ def reverse_complement(seq):
 def target_non_canonical(target):
     """Checks if target is non-canonical (haploptypes)"""
     if '_' in target:
-	return True
+        return True
     else:
-	return False
+        return False
     
 def compare_chr(chr1, chr2):
     """For sorting chromosome names ignoring 'chr'"""
     if chr1[:3].lower() == 'chr':
-	chr1 = chr1[3:]
+        chr1 = chr1[3:]
     if chr2[:3].lower() == 'chr':
-	chr2 = chr2[3:]
+        chr2 = chr2[3:]
     
     if re.match('^\d+$', chr1) and not re.match('^\d+$', chr2):
-	return -1
+        return -1
     
     elif not re.match('^\d+$', chr1) and re.match('^\d+$', chr2):
-	return 1
+        return 1
     
     else:
-	if re.match('^\d+$', chr1) and re.match('^\d+$', chr2):
-	    chr1 = int(chr1)
-	    chr2 = int(chr2)
-	    
-	if chr1 < chr2:
-	    return -1
-	elif chr1 > chr2:
-	    return 1
-	else:
-	    return 0
+        if re.match('^\d+$', chr1) and re.match('^\d+$', chr2):
+            chr1 = int(chr1)
+            chr2 = int(chr2)
+            
+        if chr1 < chr2:
+            return -1
+        elif chr1 > chr2:
+            return 1
+        else:
+            return 0
     
 def bam2bed(bam, out, name_sorted=True, header=None, min_size=None, no_chimera=True):
     if header is not None:
-	out.write(header + '\n')
+        out.write(header + '\n')
     if name_sorted:
-	aligns = []
-	outputs = []
-	for query, group in groupby(bam.fetch(until_eof=True), lambda x: x.qname):
-	    alns = list(group)
+        aligns = []
+        outputs = []
+        for query, group in groupby(bam.fetch(until_eof=True), lambda x: x.qname):
+            alns = list(group)
 
-	    if alns[0].is_unmapped:
-		continue
+            if alns[0].is_unmapped:
+                continue
 
-	    if len(alns) == 1:
-		align = Alignment.from_alignedRead(alns[0], bam)
+            if len(alns) == 1:
+                align = Alignment.from_alignedRead(alns[0], bam)
 
-		# size filtering
-		if min_size is not None and align.query_len < min_size:
-		    continue
+                # size filtering
+                if min_size is not None and align.query_len < min_size:
+                    continue
 
-		try:
-		    output = align.as_bed()
-		except:
-		    sys.stderr.write("can't convert alignment of contig %s to bed\n" % query)
+                try:
+                    output = align.as_bed()
+                except:
+                    sys.stderr.write("can't convert alignment of contig %s to bed\n" % query)
 
-		outputs.append((align.target, align.tstart, align.tend, output))
+                outputs.append((align.target, align.tstart, align.tend, output))
 
-	for output in sorted(outputs, key=itemgetter(0, 1, 2)):
-	    out.write(output[-1] + '\n')
+        for output in sorted(outputs, key=itemgetter(0, 1, 2)):
+            out.write(output[-1] + '\n')
 
     else:
-	for aln in groupby(bam.fetch(until_eof=True), lambda x: x.qname):
-	    align = Alignment.from_alignedRead(alns[0], bam)
-	    if min_size is not None and align.query_len < min_size:
-		continue
+        for aln in groupby(bam.fetch(until_eof=True), lambda x: x.qname):
+            align = Alignment.from_alignedRead(alns[0], bam)
+            if min_size is not None and align.query_len < min_size:
+                continue
 
-	    try:
-		out.write(align.as_bed() + '\n')
-	    except:
-		sys.stderr.write("can't convert alignment of contig %s to bed\n" % query)
+            try:
+                out.write(align.as_bed() + '\n')
+            except:
+                sys.stderr.write("can't convert alignment of contig %s to bed\n" % query)
 
     out.close()
     
@@ -245,4 +245,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     if args.bam2bed:
-	bam2bed(args.bam, args.output, header=args.header, min_size=args.min_size)
+        bam2bed(args.bam, args.output, header=args.header, min_size=args.min_size)

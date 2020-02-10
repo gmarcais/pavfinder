@@ -86,7 +86,7 @@ def main():
         
     # realign to increase specificity
     if args.genome and args.index_dir and sv_finder.variants:
-	sv_finder.screen_realigns(use_realigns=args.use_realigns)
+        sv_finder.screen_realigns(use_realigns=args.use_realigns)
             
     # output
     cmd = ' '.join(sys.argv)
@@ -99,11 +99,11 @@ def main():
                      )
     
     if args.r2c:
-	support_script = '%s/check_support.py' % (os.path.dirname(__file__))
-	sv_finder.find_support(support_script, args.r2c,
-	                       args.min_support, args.min_overlap, args.allow_clipped,
-	                       args.normal_bam, args.min_support_normal, args.min_overlap_normal,
-	                       args.allow_clipped_normal, args.support_min_mapped,
-	                       force=args.force_support, debug=args.debug)
+        support_script = '%s/check_support.py' % (os.path.dirname(__file__))
+        sv_finder.find_support(support_script, args.r2c,
+                               args.min_support, args.min_overlap, args.allow_clipped,
+                               args.normal_bam, args.min_support_normal, args.min_overlap_normal,
+                               args.allow_clipped_normal, args.support_min_mapped,
+                               force=args.force_support, debug=args.debug)
 
 main()

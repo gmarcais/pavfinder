@@ -74,20 +74,20 @@ def get_orfs(sequence, frames=None, only_strand=None, min_size=1):
 def check_frame(query_seq, seq_breaks, genome_breaks, genome_fasta, transcripts, event_type, size):
     in_frame = None
     if transcripts[0].is_coding() and transcripts[1].is_coding():
-	if event_type in ('ins', 'del', 'repeat-expansion', 'repeat-reduction'):
-	    if transcripts[0] == transcripts[1] and\
-	       not transcripts[0].within_utr(genome_breaks[0]) and\
-	       not transcripts[0].within_utr(genome_breaks[1]):
-		if size % 3 == 0:
-		    return True
-		else:
-		    return False
-	else:
-	    in_frame = is_inframe(transcripts[0],
-		                  transcripts[1],
-		                  seq_breaks,
-		                  query_seq,
-		                  genome_fasta)
+        if event_type in ('ins', 'del', 'repeat-expansion', 'repeat-reduction'):
+            if transcripts[0] == transcripts[1] and\
+               not transcripts[0].within_utr(genome_breaks[0]) and\
+               not transcripts[0].within_utr(genome_breaks[1]):
+                if size % 3 == 0:
+                    return True
+                else:
+                    return False
+        else:
+            in_frame = is_inframe(transcripts[0],
+                                  transcripts[1],
+                                  seq_breaks,
+                                  query_seq,
+                                  genome_fasta)
     return in_frame
 
 def is_inframe(txt5, txt3, query_breaks, query_seq, genome_fasta):
@@ -135,18 +135,18 @@ def is_inframe(txt5, txt3, query_breaks, query_seq, genome_fasta):
             
             up_orf_test = up_orf[-1 * min(max_aa_len_test, len(up_orf)):]
             down_orf_test = down_orf[:min(max_aa_len_test, len(down_orf))]
-	    down_orf_test1 = down_orf[1:][:min(max_aa_len_test, len(down_orf))]
+            down_orf_test1 = down_orf[1:][:min(max_aa_len_test, len(down_orf))]
             
             if up_orf_test in orf5 and (down_orf_test in orf3 or down_orf_test1 in orf3):
                 match5 = re.search(up_orf_test, orf5)
                 aa5 = match5.end()
                                     
-		if down_orf_test in orf3:
-		    match3 = re.search(down_orf_test, orf3)
-		    aa3 = match3.start() + 1
-		else:
-		    match3 = re.search(down_orf_test1, orf3)
-		    aa3 = match3.start() + 1
+                if down_orf_test in orf3:
+                    match3 = re.search(down_orf_test, orf3)
+                    aa3 = match3.start() + 1
+                else:
+                    match3 = re.search(down_orf_test1, orf3)
+                    aa3 = match3.start() + 1
                 
                 return (aa5, aa3, novel_aa)
                 
@@ -154,6 +154,6 @@ def is_inframe(txt5, txt3, query_breaks, query_seq, genome_fasta):
 
 def nuc_to_aa(nuc):
     if len(nuc) == 3:
-	seq = Seq(nuc)
-	return seq[0:].translate()
+        seq = Seq(nuc)
+        return seq[0:].translate()
     return None

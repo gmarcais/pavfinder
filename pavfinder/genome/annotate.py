@@ -18,20 +18,20 @@ def get_acen_coords(cytobands_file):
     """
     acen_coords = None
     try:
-	fh = open(cytobands_file, 'r')
-	with fh:
-	    acen_coords = {}
-	    for line in fh:
-		chrom, start, end, band, stain = line.rstrip('\n').split('\t')
-		if stain == 'acen':
-		    try:
-			acen_coords[chrom].append((start, end))
-		    except:
-			acen_coords[chrom] = [(start, end)]
+        fh = open(cytobands_file, 'r')
+        with fh:
+            acen_coords = {}
+            for line in fh:
+                chrom, start, end, band, stain = line.rstrip('\n').split('\t')
+                if stain == 'acen':
+                    try:
+                        acen_coords[chrom].append((start, end))
+                    except:
+                        acen_coords[chrom] = [(start, end)]
 
     except:
-	sys.stderr.write("can't open cytobands file:%s\n" % cytobands_file)
-			    
+        sys.stderr.write("can't open cytobands file:%s\n" % cytobands_file)
+                            
     return acen_coords    
     
 
@@ -40,23 +40,23 @@ def update_features(variant, features):
     
     Args:
         variant: (Variant) Variant to update annotation
-	features: (tuple) 2 Pybetools Interval objects that overlap the 2 breakpoints
+        features: (tuple) 2 Pybetools Interval objects that overlap the 2 breakpoints
     """
     for i in range(2):
-	if features[i] is not None:
-	    variant.genes[i] = features[i].attrs['gene_name']
-	    variant.transcripts[i] = features[i].attrs['transcript_id']
-	    variant.gene_strands[i] = features[i].strand
-	    if features[i].attrs.has_key('exon_number'):
-		variant.exons[i] = int(features[i].attrs['exon_number'])
-	    if features[i].attrs.has_key('intron_number'):
-		variant.introns[i] = int(features[i].attrs['intron_number'])
-	    if features[i].attrs.has_key('exon_bound'):
-		if features[i].attrs['exon_bound'] == 'True':
-		    variant.exon_bounds[i] = True
-		else:
-		    variant.exon_bounds[i] = False
-		    
+        if features[i] is not None:
+            variant.genes[i] = features[i].attrs['gene_name']
+            variant.transcripts[i] = features[i].attrs['transcript_id']
+            variant.gene_strands[i] = features[i].strand
+            if features[i].attrs.has_key('exon_number'):
+                variant.exons[i] = int(features[i].attrs['exon_number'])
+            if features[i].attrs.has_key('intron_number'):
+                variant.introns[i] = int(features[i].attrs['intron_number'])
+            if features[i].attrs.has_key('exon_bound'):
+                if features[i].attrs['exon_bound'] == 'True':
+                    variant.exon_bounds[i] = True
+                else:
+                    variant.exon_bounds[i] = False
+                    
 def annotate_rna_event(variant):
     if variant.genes[0] != 'NA' and\
        variant.genes[1] != 'NA':
@@ -298,11 +298,11 @@ def parse_overlaps(bed_file, variant_keys=None):
     
     Args:
         bed_file: (str) Path of bedtools results of event coords vs. annotation
-	variant_keys: (Set) Keys of variants (variant.key()) to consider only
+        variant_keys: (Set) Keys of variants (variant.key()) to consider only
         
     Returns:
         List of (variant_key, (feature1, feature2))
-	where a 'feature' is an Interval object (from Pybedtools) that's chosen for the breakpoint in question
+        where a 'feature' is an Interval object (from Pybedtools) that's chosen for the breakpoint in question
     """
     results = []
     
@@ -339,9 +339,9 @@ def create_batches(bed_file, variants, size):
     
     Args:
         bed_file: (str) Path of bedtools results of event coords vs. annotation
-	variants: (list) Entire list of variant keys to be divided 
-	size: (int) Number of variant keys to be processed in each batch
-	
+        variants: (list) Entire list of variant keys to be divided 
+        size: (int) Number of variant keys to be processed in each batch
+        
     Yields:
         Tuple of (bed_file, list of variant_keys)
     """
@@ -360,7 +360,7 @@ def worker(args):
     
     Args:
         args: (tuple) Bed file, list of variant keys
-	
+        
     Returns:
         Function call to parse_overlaps()
     """
@@ -372,12 +372,12 @@ def parallel_parse_overlaps(bed_file, variant_keys, num_procs):
     
     Args:
         bed_file: (str) Path of bedtools results of event coords vs. annotation
-	variant_keys: (list) Entire list of variant keys to be divided 
-	num_procs: (int) Number of processes the parallelization is going to use
-	
+        variant_keys: (list) Entire list of variant keys to be divided 
+        num_procs: (int) Number of processes the parallelization is going to use
+        
     Returns:
         A dictionary of results with the variant key as the key 
-	and a tuple of Interval objects as the value
+        and a tuple of Interval objects as the value
     """
     batches = list(create_batches(bed_file, variant_keys, len(variant_keys)/num_procs))
     pool = mp.Pool(processes=num_procs)
